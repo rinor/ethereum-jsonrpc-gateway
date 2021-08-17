@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"strings"
@@ -138,11 +139,50 @@ func (p *FallbackProxy) handle(req *Request) ([]byte, error) {
 
 		if isUpstreamValid {
 			bts, err := currentRunningConfig.Upstreams[index].handle(req)
+			var dataResponse ResponseData
+			err1 := json.Unmarshal(bts, &dataResponse)
+			var errId int64
+			var errState interface{}= nil
+			if true {
+				if err1 == nil {
+					if dataResponse.Error != nil {
+						errId = dataResponse.ID
+						errState = dataResponse.Error
+					}
+				} else {
 
-			if err != nil {
+					prefix := append([]byte("{\"batchData\":"), bts...)
+					suffix := []byte("}")
+
+					dataResponseBatchBytes := append(prefix[:len(prefix)-1], suffix...)
+					//fmt.Printf(string(dataResponseBatchBytes))
+					var dataResponseBatch ResponseDataBatch
+					err2 := json.Unmarshal(dataResponseBatchBytes, &dataResponseBatch)
+					if err2 == nil {
+						fmt.Printf("err")
+						batch :=dataResponseBatch.BatchData
+						for i := 0; i < len(batch); i++ {
+							dataResponse = batch[i]
+							if dataResponse.Error != nil {
+								errId = dataResponse.ID
+								errState = dataResponse.Error
+								break
+							}
+						}
+					}
+
+				}
+			}
+
+			if err != nil || errState != nil {
 				nextUpstreamIndex := int(math.Mod(float64(index+1), float64(len(currentRunningConfig.Upstreams))))
 				p.currentUpstreamIndex.Store(nextUpstreamIndex)
 				p.upsteamStatus.Store(i, false)
+				if true {
+					if errState != nil {
+						logrus.Infof("call state err at request id %d : err %v", errId, errState)
+					}
+				}
 
 				logrus.Infof("upstream %d return err, switch to %d", index, nextUpstreamIndex)
 

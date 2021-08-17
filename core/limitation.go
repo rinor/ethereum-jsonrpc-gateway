@@ -16,6 +16,17 @@ type RequestData struct {
 	Params  []interface{} `json:"params"`
 }
 
+type ResponseData struct {
+	JsonRpc string        `json:"jsonrpc"`
+	ID      int64         `json:"id"`
+	Result  string        `json:"result"`
+	Error   interface{} `json:"error"`
+}
+
+type ResponseDataBatch struct {
+	BatchData []ResponseData `json:"batchData"`
+}
+
 // eth_call
 // eth_estimateGas
 // eth_getLogs
