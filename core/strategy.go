@@ -207,14 +207,22 @@ func (p *FallbackProxy) handle(req *Request) ([]byte, error) {
 }
 
 func (p *FallbackProxy) getNextValidUpstreamIndex(currentIndex int) int {
-	for i := 0; i < len(currentRunningConfig.Upstreams); i++ {
-		index := p.currentUpstreamIndex.Load().(int)
-
-		value, _ := p.upsteamStatus.Load(index)
+	for i := currentIndex+1; i < len(currentRunningConfig.Upstreams); i++ {
+		value, _ := p.upsteamStatus.Load(i)
 		isUpstreamValid := value.(bool)
 
 		if isUpstreamValid {
-			return index
+			return i
+		}
+
+	}
+
+	for i := 0; i < currentIndex; i++ {
+		value, _ := p.upsteamStatus.Load(i)
+		isUpstreamValid := value.(bool)
+
+		if isUpstreamValid {
+			return i
 		}
 
 	}
