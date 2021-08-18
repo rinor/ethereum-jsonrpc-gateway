@@ -142,7 +142,7 @@ func (p *FallbackProxy) handle(req *Request) ([]byte, error) {
 			var dataResponse ResponseData
 			err1 := json.Unmarshal(bts, &dataResponse)
 			var errId int64
-			var errState interface{}= nil
+			var errState interface{} = nil
 			if true {
 				if err1 == nil {
 					if dataResponse.Error != nil {
@@ -160,7 +160,7 @@ func (p *FallbackProxy) handle(req *Request) ([]byte, error) {
 					err2 := json.Unmarshal(dataResponseBatchBytes, &dataResponseBatch)
 					if err2 == nil {
 						fmt.Printf("err")
-						batch :=dataResponseBatch.BatchData
+						batch := dataResponseBatch.BatchData
 						for i := 0; i < len(batch); i++ {
 							dataResponse = batch[i]
 							if dataResponse.Error != nil {
@@ -193,10 +193,30 @@ func (p *FallbackProxy) handle(req *Request) ([]byte, error) {
 
 				continue
 			} else {
+				//nextUpstreamIndex := int(math.Mod(float64(index+1), float64(len(currentRunningConfig.Upstreams))))
+				nextUpstreamIndex := p.getNextValidUpstreamIndex(index)
+				p.currentUpstreamIndex.Store(nextUpstreamIndex)
+				p.upsteamStatus.Store(index, true)
+				logrus.Infof("load balance round robin switch from %d to %d", index, nextUpstreamIndex)
 				return bts, nil
 			}
 		}
 	}
 
 	return nil, fmt.Errorf("no valid upstream")
+}
+
+func (p *FallbackProxy) getNextValidUpstreamIndex(currentIndex int) int {
+	for i := 0; i < len(currentRunningConfig.Upstreams); i++ {
+		index := p.currentUpstreamIndex.Load().(int)
+
+		value, _ := p.upsteamStatus.Load(index)
+		isUpstreamValid := value.(bool)
+
+		if isUpstreamValid {
+			return index
+		}
+
+	}
+	return currentIndex
 }
