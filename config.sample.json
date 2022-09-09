@@ -4,7 +4,7 @@
     "http://localhost:8545"
   ],
 
-  "_sendRawTransactionUrl": "for archive data, support http, https, or set empty string",
+  "_sendRawTransactionUrl": "for eth_sendRawTransaction, support http, https, or set empty string",
   "sendRawTransactionUrl": "http://localhost:8545",
 
   "_oldTrieUrl": "for archive data, support http, https, or set empty string",
