@@ -40,10 +40,11 @@ type WsUpstream struct {
 }
 
 type HttpUpstream struct {
-	ctx         context.Context
-	url         string
-	oldTrieUrl  string
-	blockNumber int
+	ctx                   context.Context
+	url                   string
+	oldTrieUrl            string
+	sendRawTransactionUrl string
+	blockNumber           int
 }
 
 type BlockNumberResponseData struct {
@@ -52,18 +53,24 @@ type BlockNumberResponseData struct {
 	Result  string `json:"result"`
 }
 
-func newUpstream(ctx context.Context, urlString string, oldTrieUrlString string) Upstream {
+func newUpstream(ctx context.Context, urlString string, oldTrieUrlString string, sendRawTransactionUrl string) Upstream {
 	u, err := url.Parse(urlString)
-
 	if err != nil {
 		panic(err)
 	}
 
 	ou := u
+	su := u
 
 	if urlString != oldTrieUrlString {
 		ou, err = url.Parse(oldTrieUrlString)
+		if err != nil {
+			panic(err)
+		}
+	}
 
+	if urlString != sendRawTransactionUrl {
+		su, err = url.Parse(sendRawTransactionUrl)
 		if err != nil {
 			panic(err)
 		}
@@ -72,7 +79,7 @@ func newUpstream(ctx context.Context, urlString string, oldTrieUrlString string)
 	var up Upstream
 
 	if u.Scheme == "http" || u.Scheme == "https" {
-		up = newHttpUpstream(ctx, u, ou)
+		up = newHttpUpstream(ctx, u, ou, su)
 	} else if u.Scheme == "ws" || u.Scheme == "wss" {
 		up = newWsStream(ctx, u)
 	} else {
@@ -85,7 +92,9 @@ func newUpstream(ctx context.Context, urlString string, oldTrieUrlString string)
 func (u *HttpUpstream) handle(request *Request) ([]byte, error) {
 	ul := u.url
 
-	if request.isOldTrieRequest(u.blockNumber) {
+	if request.isSendRawTransaction() {
+		ul = u.sendRawTransactionUrl
+	} else if request.isOldTrieRequest(u.blockNumber) {
 		ul = u.oldTrieUrl
 	}
 
@@ -232,11 +241,12 @@ func (u *WsUpstream) runConn(ctx context.Context, conn *websocket.Conn) {
 	<-connContext.Done()
 }
 
-func newHttpUpstream(ctx context.Context, url *url.URL, oldTrieUrl *url.URL) *HttpUpstream {
+func newHttpUpstream(ctx context.Context, url *url.URL, oldTrieUrl *url.URL, sendRawTransactionUrl *url.URL) *HttpUpstream {
 	up := &HttpUpstream{
-		ctx:        ctx,
-		url:        url.String(),
-		oldTrieUrl: oldTrieUrl.String(),
+		ctx:                   ctx,
+		url:                   url.String(),
+		oldTrieUrl:            oldTrieUrl.String(),
+		sendRawTransactionUrl: sendRawTransactionUrl.String(),
 	}
 
 	if url != oldTrieUrl {

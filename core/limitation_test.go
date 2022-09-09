@@ -15,16 +15,16 @@ func TestIsAllowedMethod(t *testing.T) {
 		"upstreams": [
 		  "https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707"
 		],
-	  
+
 		"_strategy": "support NAIVE, RACE, FALLBACK",
 		"strategy": "NAIVE",
-	  
+
 		"_methodLimitationEnabled": "limit or not",
 		"methodLimitationEnabled": true,
-	  
+
 		"_allowedMethods": "can be ignored when set methodLimitationEnabled false",
 		"allowedMethods": ["eth_blockNumber"],
-	  
+
 		"_contractWhitelist": "can be ignored when set methodLimitationEnabled false",
 		"contractWhitelist": []
 	  }`
@@ -51,18 +51,19 @@ func TestInWhitelist(t *testing.T) {
 		"upstreams": [
 		  "https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707"
 		],
-	  
+
 		"_strategy": "support NAIVE, RACE, FALLBACK",
 		"strategy": "NAIVE",
-	  
+
 		"_methodLimitationEnabled": "limit or not",
 		"methodLimitationEnabled": true,
-	  
+		"contractLimitationEnabled": true,
+
 		"_allowedMethods": "can be ignored when set methodLimitationEnabled false",
 		"allowedMethods": ["eth_blockNumber", "eth_getBalance", "eth_call", "eth_sendRawTransaction"],
-	  
-		"_contractWhitelist": "can be ignored when set methodLimitationEnabled false",
-		"contractWhitelist": ["0x06898143df04616a8a8f9614deb3b99ba12b3096"]
+
+		"_allowedContracts": "can be ignored when set methodLimitationEnabled false",
+		"allowedContracts": ["0x06898143df04616a8a8f9614deb3b99ba12b3096"]
 	  }`
 
 	ctx := context.Background()
@@ -77,8 +78,8 @@ func TestInWhitelist(t *testing.T) {
 		logrus.Fatal(err)
 	}
 
-	assert.Equal(t, true, inWhitelist("0x06898143df04616a8a8f9614deb3b99ba12b3096"))
-	assert.Equal(t, false, inWhitelist("0x126aa4Ef50A6e546Aa5ecD1EB83C060fB780891a"))
+	assert.Equal(t, true, isAllowedContract("0x06898143df04616a8a8f9614deb3b99ba12b3096"))
+	assert.Equal(t, false, isAllowedContract("0x126aa4Ef50A6e546Aa5ecD1EB83C060fB780891a"))
 }
 
 func TestIsValidCall(t *testing.T) {
@@ -87,18 +88,19 @@ func TestIsValidCall(t *testing.T) {
 		"upstreams": [
 		  "https://ropsten.infura.io/v3/83438c4dcf834ceb8944162688749707"
 		],
-	  
+
 		"_strategy": "support NAIVE, RACE, FALLBACK",
 		"strategy": "NAIVE",
-	  
+
 		"_methodLimitationEnabled": "limit or not",
 		"methodLimitationEnabled": true,
-	  
+		"contractLimitationEnabled": true,
+
 		"_allowedMethods": "can be ignored when set methodLimitationEnabled false",
 		"allowedMethods": ["eth_blockNumber", "eth_getBalance", "eth_call", "eth_sendRawTransaction"],
-	  
-		"_contractWhitelist": "can be ignored when set methodLimitationEnabled false",
-		"contractWhitelist": ["0x06898143df04616a8a8f9614deb3b99ba12b3096"]
+
+		"_allowedContracts": "can be ignored when set methodLimitationEnabled false",
+		"allowedContracts": ["0x06898143df04616a8a8f9614deb3b99ba12b3096"]
 	  }`
 
 	ctx := context.Background()

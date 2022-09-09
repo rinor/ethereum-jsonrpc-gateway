@@ -12,13 +12,13 @@ import (
 
 func TestNewUpstream(t *testing.T) {
 
-	upstream1 := newUpstream(context.Background(), "http://test1.com", "http://test2.com")
+	upstream1 := newUpstream(context.Background(), "http://test1.com", "http://test2.com", "http://test3.com")
 	assert.IsType(t, &HttpUpstream{}, upstream1)
 
-	upstream2 := newUpstream(context.Background(), "ws://test1.com", "ws://test2.com")
+	upstream2 := newUpstream(context.Background(), "ws://test1.com", "ws://test2.com", "ws://test2.com")
 	assert.IsType(t, &WsUpstream{}, upstream2)
 
-	assert.Panics(t, func() { newUpstream(context.Background(), "xxx://test1.com", "xxx://test2.com") })
+	assert.Panics(t, func() { newUpstream(context.Background(), "xxx://test1.com", "xxx://test2.com", "xxx://test3.com") })
 }
 
 func TestNewHttpUpstream(t *testing.T) {
@@ -34,9 +34,16 @@ func TestNewHttpUpstream(t *testing.T) {
 		panic(err)
 	}
 
-	upstream1 := newHttpUpstream(context.Background(), url1, url2)
+	url3, err := url.Parse("http://test3.com")
+
+	if err != nil {
+		panic(err)
+	}
+
+	upstream1 := newHttpUpstream(context.Background(), url1, url2, url3)
 	assert.Equal(t, upstream1.url, "http://test1.com")
 	assert.Equal(t, upstream1.oldTrieUrl, "http://test2.com")
+	assert.Equal(t, upstream1.sendRawTransactionUrl, "http://test3.com")
 }
 
 func TestHttpHandle(t *testing.T) {
@@ -51,8 +58,7 @@ func TestHttpHandle(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-
-	upstream1 := newHttpUpstream(context.Background(), url1, url2)
+	upstream1 := newHttpUpstream(context.Background(), url1, url2, url1)
 
 	reqBodyBytes1 := []byte(fmt.Sprintf(`{"params": [], "method": "eth_blockNumber", "id": %d, "jsonrpc": "2.0"}`, time.Now().Unix()))
 	req1, err := newRequest(reqBodyBytes1)

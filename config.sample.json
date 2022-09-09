@@ -1,6 +1,11 @@
 {
   "_upstreams": "support http, https, ws, wss",
-  "upstreams": ["http://localhost:8545"],
+  "upstreams": [
+    "http://localhost:8545"
+  ],
+
+  "_sendRawTransactionUrl": "for archive data, support http, https, or set empty string",
+  "sendRawTransactionUrl": "http://localhost:8545",
 
   "_oldTrieUrl": "for archive data, support http, https, or set empty string",
   "oldTrieUrl": "",
@@ -8,12 +13,47 @@
   "_strategy": "support NAIVE, RACE, FALLBACK",
   "strategy": "NAIVE",
 
-  "_methodLimitationEnabled": "limit or not",
-  "methodLimitationEnabled": false,
+  "_methodLimitationEnabled": "limit or not methods",
+  "methodLimitationEnabled": true,
 
-  "_allowedMethods": "can be ignore if the limitation is not enabled",
-  "allowedMethods": ["eth_blockNumber"],
+  "_allowedMethods": "can be ignored if the limitation is not enabled",
+  "allowedMethods": [
+    "eth_blockNumber",
+    "eth_call",
+    "eth_chainId",
+    "eth_estimateGas",
+    "eth_gasPrice",
+    "eth_genesisAlloc",
+    "eth_getBalance",
+    "eth_getBlockByHash",
+    "eth_getBlockByNumber",
+    "eth_getBlockTransactionCountByHash",
+    "eth_getBlockTransactionCountByNumber",
+    "eth_getCode",
+    "eth_getFilterChanges",
+    "eth_getLogs",
+    "eth_getStorageAt",
+    "eth_getTransactionByBlockHashAndIndex",
+    "eth_getTransactionByBlockNumberAndIndex",
+    "eth_getTransactionByHash",
+    "eth_getTransactionCount",
+    "eth_getTransactionReceipt",
+    "eth_newBlockFilter",
+    "eth_newPendingTransactionFilter",
+    "eth_subscribe",
+    "eth_totalSupply",
+    "eth_uninstallFilter",
+    "eth_unsubscribe",
+    "net_version",
+    "web3_clientVersion",
+    "eth_sendRawTransaction"
+  ],
 
-  "_contractWhitelist": "can be ignore if the limitation is not enabled",
-  "contractWhitelist": ["0x..."]
+  "_contractLimitationEnabled": "limit or not contract interactions",
+  "contractLimitationEnabled": false,
+
+  "_allowedContracts": "can be ignored if the contractLimitationEnabled is not enabled",
+  "allowedContracts": [
+    "0x..."
+  ]
 }

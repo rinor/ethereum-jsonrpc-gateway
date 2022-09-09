@@ -17,9 +17,9 @@ type RequestData struct {
 }
 
 type ResponseData struct {
-	JsonRpc string        `json:"jsonrpc"`
-	ID      int64         `json:"id"`
-	Result  string        `json:"result"`
+	JsonRpc string      `json:"jsonrpc"`
+	ID      int64       `json:"id"`
+	Result  string      `json:"result"`
 	Error   interface{} `json:"error"`
 }
 
@@ -43,8 +43,12 @@ func isAllowedMethod(method string) bool {
 	return currentRunningConfig.allowedMethods[method]
 }
 
-func inWhitelist(contractAddress string) bool {
-	return currentRunningConfig.allowedCallContracts[strings.ToLower(contractAddress)]
+func isAllowedContract(contractAddress string) bool {
+	if !currentRunningConfig.ContractLimitationEnabled {
+		return true
+	} else {
+		return currentRunningConfig.allowedCallContracts[strings.ToLower(contractAddress)]
+	}
 }
 
 func isValidCall(req *RequestData) (err error) {
@@ -66,7 +70,7 @@ func isValidCall(req *RequestData) (err error) {
 	if req.Method == "eth_call" || req.Method == "eth_estimateGas" {
 		to := req.Params[0].(map[string]interface{})["to"].(string)
 
-		if !inWhitelist(to) {
+		if !isAllowedContract(to) {
 			return DeniedContract
 		}
 
@@ -102,7 +106,7 @@ func isValidCall(req *RequestData) (err error) {
 			return DecodeError
 		}
 
-		if !inWhitelist(contractAddress) {
+		if !isAllowedContract(contractAddress) {
 			return DeniedContract
 		}
 

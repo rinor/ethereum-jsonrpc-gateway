@@ -2,7 +2,7 @@ package core
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"time"
@@ -58,7 +58,7 @@ func (h *Server) ServerWS(conn *websocket.Conn) error {
 			return err
 		}
 
-		reqBodyBytes, _ := ioutil.ReadAll(r)
+		reqBodyBytes, _ := io.ReadAll(r)
 		proxyRequest, err := newRequest(reqBodyBytes)
 
 		if err != nil {
@@ -124,7 +124,7 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	startTime := time.Now()
-	reqBodyBytes, _ := ioutil.ReadAll(req.Body)
+	reqBodyBytes, _ := io.ReadAll(req.Body)
 	proxyRequest, err := newRequest(reqBodyBytes)
 
 	if err != nil {
@@ -134,7 +134,7 @@ func (h *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	defer func(){
+	defer func() {
 		costInMs := time.Since(startTime).Nanoseconds() / 1000000
 		if costInMs > 5000 {
 			logrus.Infof("slow request, method: %s, cost: %d", proxyRequest.data.Method, costInMs)

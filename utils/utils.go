@@ -32,3 +32,13 @@ func NoErrorFieldInJSON(jsonStr string) bool {
 
 	return false
 }
+
+func IsBatch(msg []byte) bool {
+	for _, c := range msg {
+		if c == 0x20 || c == 0x09 || c == 0x0a || c == 0x0d {
+			continue
+		}
+		return c == '['
+	}
+	return false
+}

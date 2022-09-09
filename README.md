@@ -46,7 +46,7 @@ Go version >= 1.11
 #### Steps
 
 1. Clone this repo
-2. Copy `.config.sample.jso`n to `.config.json` and set valid configuration. [Learn More](#configuration) about configuration
+2. Copy `config.sample.json` to `config.json` and set valid configuration. [Learn More](#configuration) about configuration
 3. Install the dependencies:
 
 ```
@@ -63,7 +63,7 @@ go build .
 ### Run Using Docker
 
 1. Clone this repo
-2. Copy `.config.sample.json` to `.config.json` and set valid configuration. [Learn More](#configuration) about configuration
+2. Copy `config.sample.json` to `config.json` and set valid configuration. [Learn More](#configuration) about configuration
 3. docker run
 
 ```
@@ -114,6 +114,14 @@ eg.
   "oldTrieUrl": "https://example2.com/api/v1",
 ```
 
+### sendRawTransactionUrl
+
+This field is for `eth_sendRawTransaction` method. If you set `sendRawTransactionUrl`, Gateway will route `eth_sendRawTransaction` to this url. Http(s) only, no ws(s)
+
+```
+  "sendRawTransactionUrl": "https://example2.com/api/v1",
+```
+
 ### strategy
 
 There are three strategies: `NAIVE`, `RACE`, `FALLBACK`. [Learn More](#proxy-strategy) about the Proxy Strategy.
@@ -125,7 +133,7 @@ eg.
 
 ### methodLimitationEnabled
 
-This field is about wether enabled the method limitation. The value of this field can be ture or false, if set false will ignore `allowedMethods` and `contractWhitelist`.
+This field is about wether enabled the method limitation. The value of this field can be ture or false, if set false will ignore `allowedMethods`.
 eg.
 
 ```
@@ -141,12 +149,21 @@ eg.
   "allowedMethods": ["eth_getBalance"]
 ```
 
-### contractWhitelist
+### contractLimitationEnabled
 
-Contract Whitelist,I f `methodLimitationEnabled` is true, only contract in in this whitelist can be called. Can be ignored when set `methodLimitationEnabled` false
+This field is about wether enabled the method limitation. The value of this field can be ture or false, if set false will ignore `allowedContracts`.
+eg.
 
 ```
-  "contractWhitelist": ["0x..."]
+  "contractLimitationEnabled": false
+```
+
+### allowedContracts
+
+Allowed contracts, If `contractLimitationEnabled` is true, only contract in in this whitelist can be called. Can be ignored when set `contractLimitationEnabled` false
+
+```
+  "allowedContracts": ["0x..."]
 ```
 
 ## Proxy Strategy

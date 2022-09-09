@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,7 +32,41 @@ func waitExitSignal(ctxStop context.CancelFunc) {
 	ctxStop()
 }
 
+func setLogLevel() {
+	lvl, ok := os.LookupEnv("LOG_LEVEL")
+	// LOG_LEVEL not set, let's default to debug
+	if !ok {
+		lvl = "debug"
+	}
+	// parse string, this is built-in feature of logrus
+	ll, err := logrus.ParseLevel(lvl)
+	if err != nil {
+		ll = logrus.DebugLevel
+	}
+	// set global log level
+	logrus.SetLevel(ll)
+	logrus.SetFormatter(&logrus.TextFormatter{TimestampFormat: time.RFC3339, FullTimestamp: true})
+}
+
+// ulimits - increase resources
+func ulimits() error {
+	var rLimit syscall.Rlimit
+	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit); err != nil {
+		return fmt.Errorf("error getting rlimit: %s", err)
+	}
+	rLimit.Cur = rLimit.Max
+	if err := syscall.Setrlimit(syscall.RLIMIT_NOFILE, &rLimit); err != nil {
+		return fmt.Errorf("error setting ulimit: %s", err)
+	}
+	return nil
+}
+
 func Run() int {
+	setLogLevel()
+
+	if err := ulimits(); err != nil {
+		logrus.Warnf("Could not change ulimits : %v\n", err)
+	}
 
 	ctx, stop := context.WithCancel(context.Background())
 	go waitExitSignal(stop)

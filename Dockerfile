@@ -1,4 +1,4 @@
-FROM golang:1.13 as builder
+FROM golang:1.19 as builder
 WORKDIR /app
 COPY . /app
 RUN go build -v -installsuffix cgo -ldflags '-s -w' -o /app/ethereum-jsonrpc-gateway main.go

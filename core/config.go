@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -12,22 +12,25 @@ import (
 )
 
 type Config struct {
-	Upstreams               []string `json:"upstreams"`
-	OldTrieUrl              string   `json:"oldTrieUrl"`
-	Strategy                string   `json:"strategy"`
-	MethodLimitationEnabled bool     `json:"methodLimitationEnabled"`
-	AllowedMethods          []string `json:"allowedMethods"`
-	ContractWhitelist       []string `json:"contractWhitelist"`
+	Upstreams                 []string `json:"upstreams"`
+	SendRawTransactionUrl     string   `json:"sendRawTransactionUrl"`
+	OldTrieUrl                string   `json:"oldTrieUrl"`
+	Strategy                  string   `json:"strategy"`
+	MethodLimitationEnabled   bool     `json:"methodLimitationEnabled"`
+	AllowedMethods            []string `json:"allowedMethods"`
+	ContractLimitationEnabled bool     `json:"contractLimitationEnabled"`
+	AllowedContracts          []string `json:"allowedContracts"`
 }
 
 type RunningConfig struct {
-	ctx                     context.Context
-	stop                    context.CancelFunc
-	Upstreams               []Upstream
-	Strategy                IStrategy
-	MethodLimitationEnabled bool
-	allowedMethods          map[string]bool
-	allowedCallContracts    map[string]bool
+	ctx                       context.Context
+	stop                      context.CancelFunc
+	Upstreams                 []Upstream
+	Strategy                  IStrategy
+	MethodLimitationEnabled   bool
+	ContractLimitationEnabled bool
+	allowedMethods            map[string]bool
+	allowedCallContracts      map[string]bool
 }
 
 var currentConfigString string = ""
@@ -43,7 +46,7 @@ func LoadConfig(ctx context.Context, quit chan bool) {
 				config := &Config{}
 
 				logrus.Debugf("load config from file")
-				bts, err := ioutil.ReadFile("./config.json")
+				bts, err := os.ReadFile("./config.json")
 
 				if err != nil {
 					if currentConfigString == "" {
@@ -93,16 +96,23 @@ func BuildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*
 
 		var primaryUrl string
 		var oldTrieUrl string
+		var sendRawTransactionUrl string
+
+		primaryUrl = url
+
+		if cfg.SendRawTransactionUrl != "" {
+			sendRawTransactionUrl = cfg.SendRawTransactionUrl
+		} else {
+			sendRawTransactionUrl = url
+		}
 
 		if cfg.OldTrieUrl != "" {
-			primaryUrl = url
 			oldTrieUrl = cfg.OldTrieUrl
 		} else {
-			primaryUrl = url
 			oldTrieUrl = url
 		}
 
-		rcfg.Upstreams = append(rcfg.Upstreams, newUpstream(ctx, primaryUrl, oldTrieUrl))
+		rcfg.Upstreams = append(rcfg.Upstreams, newUpstream(ctx, primaryUrl, oldTrieUrl, sendRawTransactionUrl))
 	}
 
 	if len(rcfg.Upstreams) == 0 {
@@ -136,9 +146,11 @@ func BuildRunningConfigFromConfig(parentContext context.Context, cfg *Config) (*
 		rcfg.allowedMethods[cfg.AllowedMethods[i]] = true
 	}
 
+	rcfg.ContractLimitationEnabled = cfg.ContractLimitationEnabled
+
 	rcfg.allowedCallContracts = make(map[string]bool)
-	for i := 0; i < len(cfg.ContractWhitelist); i++ {
-		rcfg.allowedCallContracts[strings.ToLower(cfg.ContractWhitelist[i])] = true
+	for i := 0; i < len(cfg.AllowedContracts); i++ {
+		rcfg.allowedCallContracts[strings.ToLower(cfg.AllowedContracts[i])] = true
 	}
 
 	return rcfg, nil

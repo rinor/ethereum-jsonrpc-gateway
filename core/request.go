@@ -25,6 +25,10 @@ func getBlockNumberRequest() *Request {
 	return res
 }
 
+func (r *Request) isSendRawTransaction() bool {
+	return r.data.Method == "eth_sendRawTransaction"
+}
+
 func (r *Request) isOldTrieRequest(currentBlockNumber int) (res bool) {
 	defer func() {
 		r.isArchiveDataRequest = res
@@ -74,20 +78,29 @@ func newRequest(reqBodyBytes []byte) (*Request, error) {
 	logger := logrus.WithFields(logrus.Fields{"request_id": utils.RandStringRunes(8)})
 
 	var data RequestData
-	_ = json.Unmarshal(reqBodyBytes, &data)
-
-	logger.Debugf("New, method: %s\n", data.Method)
-	logger.Debugf("Request Body: %s\n", string(reqBodyBytes))
-
 	req := &Request{
 		logger:   logger,
 		data:     &data,
 		reqBytes: reqBodyBytes,
 	}
 
-	// method limit, for directly external access
-	err := req.valid()
+	err := json.Unmarshal(reqBodyBytes, &data)
+	if err != nil {
+		logger.Infof("Unmarshal: %s\n", "data reqBodyBytes")
+		return req, err
+	}
 
+	logger.Debugf("New, method: %s\n", data.Method)
+	logger.Debugf("Request Body: %s\n", string(reqBodyBytes))
+
+	// batch requests not supported yet
+	if utils.IsBatch(reqBodyBytes) {
+		req.data.ID = -1
+		return req, fmt.Errorf("batch requests not supported yet")
+	}
+
+	// method limit, for directly external access
+	err = req.valid()
 	if err != nil {
 		return req, err
 	}
